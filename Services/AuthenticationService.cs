@@ -1,24 +1,51 @@
-﻿using ChatAppXpress.Data;
+﻿using System.Security.Claims;
+using ChatAppXpress.Data;
 using ChatAppXpress.DTO;
 using ChatAppXpress.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ChatAppXpress.Services
 {
     public class AuthenticationService : IAuthenticationService, IDisposable
     {
         private readonly ApplicationDbContext context;
+        private readonly IConfiguration configuration;
+        private bool disposed = false;
 
-        public AuthenticationService(ApplicationDbContext dbContext)
+        public AuthenticationService(ApplicationDbContext dbContext, IConfiguration configuration)
         {
             context = dbContext;
+            this.configuration = configuration;
         }
-
-        public Task<string> Authenticate(UserDTO request)
+        public async Task<string?> Authenticate(UserDTO request)
         {
-            throw new NotImplementedException();
+            User? user = await context.Users.FirstOrDefaultAsync(user => user.UserName == request.Username);
+            if(user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password)){
+                return null;
+            }
+            return GenerateJWT(user);
         }
+        public string GenerateJWT(User request){
+            List<Claim> claims = new List<Claim>{
+                new Claim(ClaimTypes.NameIdentifier, request.Id.ToString())
+            };
 
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                configuration.GetSection("AppSettings:Token").Value!));
+
+            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                signingCredentials: cred,
+                expires: DateTime.Now.AddDays(1)
+            );
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return jwt;
+        }
         public async Task<int?> SignUp(User request)
         {
             try
@@ -61,7 +88,5 @@ namespace ChatAppXpress.Services
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        private bool disposed = false;
     }
 }

@@ -12,6 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IContactsService, ContactsService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseNpgsql(

@@ -5,7 +5,8 @@ namespace ChatAppXpress.Services
 {
     public interface IAuthenticationService : IDisposable
     {
-        Task<String> Authenticate(UserDTO request);
+        Task<string?> Authenticate(UserDTO request);
         Task<int?> SignUp(User request);
+        string GenerateJWT(User user);
     }
 }

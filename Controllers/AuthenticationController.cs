@@ -1,4 +1,5 @@
 ﻿using ChatAppXpress.Data;
+using ChatAppXpress.DTO;
 using ChatAppXpress.Models;
 using ChatAppXpress.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,18 +10,18 @@ namespace ChatAppXpress.Controllers
     [ApiController]
     public class AuthenticationController : Controller
     {
-        private readonly ApplicationDbContext _context;
-
-        public AuthenticationController(ApplicationDbContext applicationDbContext)
+        private readonly IAuthenticationService authenticationRepository;
+        public AuthenticationController(IAuthenticationService authenticationService)
         {
-            _context = applicationDbContext;
+            this.authenticationRepository = authenticationService;
         }
-        [HttpPost]
+        
+        [HttpPost("/signup")]
         public async Task<IActionResult> SignUp(User request)
         {
-            using (var authenticationService = new AuthenticationService(_context))
+            using (authenticationRepository)
             {
-                var isSigned = await authenticationService.SignUp(request);
+                var isSigned = await authenticationRepository.SignUp(request);
                 if(isSigned == null)
                 {
                     return BadRequest();
@@ -29,6 +30,17 @@ namespace ChatAppXpress.Controllers
                 {
                     return Ok(isSigned);
                 }
+            }
+        }
+
+        [HttpPost("/login")]
+        public async Task<IActionResult> LogIng(UserDTO request){
+            using(authenticationRepository){
+                var requestJWT = await authenticationRepository.Authenticate(request);
+                if( requestJWT == null){
+                    return BadRequest();
+                }
+                return Ok(requestJWT);
             }
         }
     }
