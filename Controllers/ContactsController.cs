@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using ChatAppXpress.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatAppXpress.Controllers{
@@ -11,17 +13,23 @@ namespace ChatAppXpress.Controllers{
             this.contactService = _contactService;
         }
 
-        [HttpGet]
+        [HttpGet("contacts")]
+        [Authorize]
         public async Task<IActionResult> ContactList(){
-            using(contactService){
-                try{
-                    var contactList = await contactService.GetContactList();
-                    return Ok(contactList);
-                }
-                catch(Exception ex){
-                    return StatusCode(500,ex.Message);
+
+            var authUserId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if( authUserId != null ){
+                using(contactService){
+                    try{
+                        var contactList = await contactService.GetContactList(Int32.Parse(authUserId));
+                        return Ok(contactList);
+                    }
+                    catch(Exception ex){
+                        return StatusCode(500,ex.Message);
+                    }
                 }
             }
+            return BadRequest();
         }
     }
 }

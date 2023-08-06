@@ -3,6 +3,14 @@ using ChatAppXpress.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+// Configura HTTPS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ConfigureHttpsDefaults(httpsOptions =>
+    {
+        // Configura tus opciones HTTPS aquí
+    });
+});
 
 // Add services to the container.
 

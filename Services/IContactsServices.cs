@@ -5,6 +5,6 @@ namespace ChatAppXpress.Services
 {
     public interface IContactsService : IDisposable
     {
-        Task<List<User>> GetContactList();
+        Task<List<User>> GetContactList(int requestId);
     }
 }
